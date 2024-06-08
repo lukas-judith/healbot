@@ -80,12 +80,24 @@ def load_interface():
             value=f"{previous_day_activity_energy_burned} calories",
         )
 
+    rehab_plan_exercises_str = ""
+
+    if recovery_plan:
+        for exercise, items in rehab_plan_exercises.items():
+            rehab_plan_exercises_str += f"""
+    **{exercise}**:
+    - {items['reason']}
+    - {items['description']}
+    - number of sets: {items['number of sets']}
+    - number of reps: {items['number of reps']}
+    """
+
     # Column 2 for injury rehab plan
     with col2:
         st.header("🩹Injury Rehab Plan")
         st.write(f"Day #{st.session_state.day_count} since surgery")
         st.write(rehab_plan_message)
-        st.write(rehab_plan_exercises)
+        st.write(rehab_plan_exercises_str)
         st.write(rehab_advice)
 
     # Column 3 for motivational quotes
