@@ -1,5 +1,12 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional
+import uuid
+
+
+class PatientDetails(BaseModel):
+    patient_id: str = Field(default_factory=lambda: "pat-" + str(uuid.uuid4()))
+    patient_name: Optional[str] = None
+    patient_age: Optional[int] = None
 
 
 class PatientBiomarkers(BaseModel):
@@ -36,3 +43,24 @@ class ModelPayload(BaseModel):
     biomarkers: PatientBiomarkers
     bod_checkup: PatientCheckup = None  # from day 2 onwards
     previous_day_feedback: PreviousDayFeedback = None  # from day 2 onwards
+
+
+# EXAMPLE:
+# {
+#     "rehab_plan_message": "You seen to be doing better, I increased the reps of the exercises. Keep it up!",
+#     "rehab_plan_exercises": [
+#         // list of exercises from the previous day, in the JSON format you use
+#     ],
+#     "rehab_advice": "Make sure to take your medication on time and get enough rest.",
+#     "motivational_message": "You're doing great! Keep up the good work!",
+#     "biomarkers_summary_message": "Your sleep duration is good, but try to increase your activity levels.",
+# }
+
+
+class ModelResponse(BaseModel):
+
+    rehab_plan_message: str
+    rehab_plan_exercises: List[dict]
+    rehab_advice: str
+    motivational_message: str
+    biomarkers_summary_message: str
