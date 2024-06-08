@@ -32,7 +32,7 @@ class DayInfo:
             out += f"Data Summary:\n{self.data_summary}\n"
 
         if self.motivational_message:
-            out += f"Motivational Message:\n{self.motivational_message}\n"
+            out += f"\nMotivational Message:\n{self.motivational_message}\n"
 
         if self.exercises:
             out += "Exercises:\n"
