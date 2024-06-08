@@ -69,7 +69,7 @@ def generate_recovery_plan_info(model_pload: dict, agent_id: str) -> dict:
     Generate information for a new daily recovery plan.
     """
 
-    print(f"RECEIVED MODEL PAYLOAD:\n{json.dumps(model_pload, indent=2)}")
+    # print(f"RECEIVED MODEL PAYLOAD:\n{json.dumps(model_pload, indent=2)}")
 
     # data validation
     payload = ModelPayload(**model_pload).model_dump()

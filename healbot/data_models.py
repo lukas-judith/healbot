@@ -16,15 +16,15 @@ class PatientBiomarkers(BaseModel):
 
 
 class PatientCheckup(BaseModel):
-    current_mental_wellness: int  # score from 1 to 10
-    current_physical_wellness: int  # score from 1 to 10
-    current_pain_level: int  # score from 1 to 10
+    current_mental_wellness: Optional[int] = None  # score from 1 to 10
+    current_physical_wellness: Optional[int] = None  # score from 1 to 10
+    current_pain_level: Optional[int] = None  # score from 1 to 10
     other_feedback: Optional[str] = None
 
 
 class PreviousDayFeedback(BaseModel):
-    previous_day_exercise_rating: int  # score from 1 to 10
-    previous_day_exercises: dict
+    previous_day_exercise_rating: Optional[int] = None  # score from 1 to 10
+    previous_day_exercises: Optional[dict] = None
     other_feedback: Optional[str] = None
 
 
