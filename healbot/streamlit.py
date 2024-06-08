@@ -18,8 +18,6 @@ from healbot.database import (
 
 AGENT_ID = "a4dcef11-857a-48aa-ba91-95a3df092226"
 
-# db_file = "data.db"
-
 
 class PatientCheckup(BaseModel):
     current_mental_wellness: int  # score from 1 to 10
@@ -36,7 +34,6 @@ class PreviousDayFeedback(BaseModel):
 
 # Function to load the main interface
 def load_interface():
-
     previous_day_activity_steps = random.randint(2000, 10000)
     previous_day_activity_energy_burned = round(random.uniform(1800, 3500), 1)
     sleep_in_bed_duration = round(random.uniform(6.0, 9.0), 1)
@@ -55,20 +52,27 @@ def load_interface():
         previous_day_feedback=None,
     )
 
-    recovery_plan = generate_recovery_plan_info(pload.model_dump(), AGENT_ID)
+    if st.session_state.generate_new_data:
+        st.session_state.generate_new_data = False
+        if not st.session_state.interface_loaded:
+            recovery_plan = generate_recovery_plan_info(pload.model_dump(), AGENT_ID)
+            # Place the resource-intensive function here
+            st.session_state.interface_loaded = True
+        else:
+            recovery_plan = {}
+    else:
+        recovery_plan = {}
 
     rehab_plan_message = recovery_plan.get("rehab-plan-message")
     rehab_plan_exercises = recovery_plan.get("rehab-plan-exercise")
     rehab_advice = recovery_plan.get("rehab-advice")
     motivation_quote = recovery_plan.get("motivational-quote")
 
-    # load data from database
     col1, col2, col3 = st.columns([1, 2, 1])
 
     # Column 1 for fitness data
     with col1:
         st.header("🏃Fitness Data")
-        # Display metrics with emojis as icons
         st.metric(label="👟 Steps taken", value=f"{previous_day_activity_steps} steps")
         st.metric(label="🌙 Sleep duration", value=f"{sleep_in_bed_duration} hours")
         st.metric(
@@ -92,7 +96,10 @@ def load_interface():
     # Add "End Day" button at the bottom
     if st.button("End Day"):
         st.session_state.page = "feedback"
-        st.experimental_rerun()
+        st.session_state.interface_loaded = (
+            False  # Reset flag when navigating to feedback
+        )
+        st.rerun()
 
 
 # Function to load the feedback page
@@ -119,7 +126,6 @@ def feedback_page():
     other_feedback_previous_day = st.text_area("Other Feedback for Yesterday:")
 
     if st.button("Submit Feedback"):
-
         st.session_state.current_mental_wellness = current_mental_wellness
         st.session_state.current_physical_wellness = current_physical_wellness
         st.session_state.current_pain_level = current_pain_level
@@ -130,15 +136,16 @@ def feedback_page():
         st.session_state.other_feedback_previous_day = other_feedback_previous_day
 
         st.session_state.day_count += 1
-
         st.session_state.page = "main"
         st.success("Thank you for your feedback! Recovery plan will be generated.")
-        # st.write(recovery_plan_info)  # Display the generated recovery plan info
-        st.experimental_rerun()
+        st.rerun()
 
 
 def surgery_info_page():
     st.header("Enter Surgery Information")
+
+    # flag for generating a new recovery plan
+    st.session_state.generate_new_data = False
 
     surgery_type = st.text_input("Surgery Type", "Knee Surgery")
     surgery_name = st.text_input(
@@ -155,7 +162,7 @@ def surgery_info_page():
         st.session_state.surgery_date = surgery_date
 
         st.session_state.page = "main"
-        st.experimental_rerun()
+        st.rerun()
 
 
 if __name__ == "__main__":
@@ -165,13 +172,13 @@ if __name__ == "__main__":
     if "day_count" not in st.session_state:
         st.session_state.day_count = 1
 
-    # steps = random.randint(2000, 10000)
-    # sleep_length = round(random.uniform(6.0, 9.0), 1)
-    # cal_burn = random.randint(1800, 3500)
+    if "interface_loaded" not in st.session_state:
+        st.session_state.interface_loaded = False
 
     if st.session_state.page == "surgery_info":
         surgery_info_page()
     elif st.session_state.page == "main":
+        st.session_state.generate_new_data = True
         load_interface()
     elif st.session_state.page == "feedback":
         feedback_page()
