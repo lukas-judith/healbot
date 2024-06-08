@@ -42,7 +42,7 @@ class ModelPayload(BaseModel):
     days_since_surgery: int
     biomarkers: PatientBiomarkers
     bod_checkup: PatientCheckup = None  # from day 2 onwards
-    previous_day_feedback: PreviousDayFeedback = None  # from day 2 onwards
+    previous_day_feedback: Optional[PreviousDayFeedback] = None  # from day 2 onwards
 
 
 # EXAMPLE:
@@ -55,12 +55,3 @@ class ModelPayload(BaseModel):
 #     "motivational_message": "You're doing great! Keep up the good work!",
 #     "biomarkers_summary_message": "Your sleep duration is good, but try to increase your activity levels.",
 # }
-
-
-class ModelResponse(BaseModel):
-
-    rehab_plan_message: str
-    rehab_plan_exercises: List[dict]
-    rehab_advice: str
-    motivational_message: str
-    biomarkers_summary_message: str

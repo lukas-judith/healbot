@@ -1,7 +1,9 @@
+import json
 import requests
 from time import sleep
 
-from healbot.data_models import ModelPayload, ModelResponse
+from healbot.data_models import ModelPayload
+from healbot.utils import clean_json
 
 
 # TODO: move to config file
@@ -31,8 +33,9 @@ def get_agent_response(agent_id: str, prompt: str) -> str:
     conversation_id = job["conversation_id"]
 
     role = None
+    content = None
 
-    while not role == "agent":
+    while not role == "agent" or content is None:
         sleep(1)
         print("Waiting for agent message")
 
@@ -47,55 +50,71 @@ def get_agent_response(agent_id: str, prompt: str) -> str:
             },
         )
 
+        # import pdb
+
+        # pdb.set_trace()
+
         conversation_messages = response.json()["results"]
 
         message = conversation_messages[0]["data"]["message"]
 
-        role = message["role"]
-        content = message["content"]
+        role = message.get("role")
+        content = message.get("content")
 
     return content
 
 
-def generate_recovery_plan_info(model_pload: dict, agent_id: str) -> ModelResponse:
+def generate_recovery_plan_info(model_pload: dict, agent_id: str) -> dict:
     """
     Generate information for a new daily recovery plan.
     """
 
-    pload = ModelPayload(**model_pload)
+    print(f"RECEIVED MODEL PAYLOAD:\n{json.dumps(model_pload, indent=2)}")
 
-    # # must format with payload accordingly
-    # prompt = "..."
+    # data validation
+    payload = ModelPayload(**model_pload).model_dump()
 
-    # # get agent response
-    # response = get_agent_response(agent_id, prompt)
+    prompt = json.dumps(payload, indent=2)
 
-    print("USING MOCK DATA FOR RESPONSE")
+    output_str = get_agent_response(agent_id, prompt)
 
-    # parse response
-    ...
+    output_json = clean_json(output_str)
 
-    # MOCK DATA:
-
-    response = {
-        "rehab_plan_message": "You seen to be doing better, I increased the reps of the exercises. Keep it up!",
-        "rehab_plan_exercises": [
-            # list of exercises from the previous day, in the JSON format you use
-        ],
-        "rehab_advice": "Make sure to take your medication on time and get enough rest.",
-        "motivational_message": "You're doing great! Keep up the good work!",
-        "biomarkers_summary_message": "Your sleep duration is good, but try to increase your activity levels.",
-    }
-
-    return ModelResponse(**response)
+    return output_json
 
 
 if __name__ == "__main__":
 
     # testing
 
-    agent_id = "a4dcef11-857a-48aa-ba91-95a3df092226"
-    prompt = "Hello! I hurt my left brain"
+    # agent_id = "a4dcef11-857a-48aa-ba91-95a3df092226"
+    # prompt = "Hello! I hurt my left brain"
 
-    ans = get_agent_response(agent_id, prompt)
-    print(ans)
+    # ans = get_agent_response(agent_id, prompt)
+    # print(ans)
+
+    model_pload = {
+        "surgery_type": "Brain Surgery",
+        "surgery_name": "Left Brain Surgery",
+        "surgery_date": "2022-01-01",
+        "days_since_surgery": 5,
+        "biomarkers": {
+            "previous_day_activity_steps": 5000,
+            "previous_day_activity_energy_burned": 200.5,
+            "sleep_in_bed_duration": 8.0,
+        },
+        "bod_checkup": {
+            "current_mental_wellness": 8,
+            "current_physical_wellness": 7,
+            "current_pain_level": 3,
+        },
+        "previous_day_feedback": None,
+    }
+
+    agent_id = "a4dcef11-857a-48aa-ba91-95a3df092226"
+
+    # response = generate_recovery_plan_info(model_pload, agent_id)
+
+    response = generate_recovery_plan_info(model_pload, agent_id)
+
+    print(response)
