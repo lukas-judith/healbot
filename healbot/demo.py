@@ -26,17 +26,29 @@ class DayInfo:
         self.feedback = feedback
 
     def __str__(self) -> str:
-        out = ""
+        out = """
+Day Info:
 
-        if self.data_summary:
-            out += f"Data Summary:\n{self.data_summary}\n"
+Data Summary: {}
 
-        if self.motivational_message:
-            out += f"\nMotivational Message:\n{self.motivational_message}\n"
+Motivational Message: {}
 
-        if self.exercises:
-            out += "Exercises:\n"
-            out += "\n".join(self.exercises) + "\n"
+Exercises:
+{}
+
+""".format(
+            self.data_summary, self.motivational_message, "\n".join(self.exercises)
+        )
+
+        # if self.data_summary:
+        #     out += f"Data Summary:\n{self.data_summary}\n"
+
+        # if self.motivational_message:
+        #     out += f"Motivational Message:\n{self.motivational_message}\n"
+
+        # if self.exercises:
+        #     out += "Exercises:\n"
+        #     out += "\n".join(self.exercises) + "\n"
 
         if self.is_today:
             out += "\nStatus: Today\n"
@@ -50,8 +62,9 @@ class DayInfo:
 
 class DailyProgression:
     def __init__(self, training_plan: str):
+        self.days = []
         self.day_idx = 0
-        self.days = self.get_days_from_initial_training_plan(training_plan)
+        self.get_days_from_initial_training_plan(training_plan)
         if self.days:
             self.days[0].is_today = True
 
@@ -66,7 +79,27 @@ class DailyProgression:
             )
             day_info.exercises = [line.strip() for line in day_lines[2:]]
             days.append(day_info)
-        return days
+        self.days = days
+
+    def update_days_from_updated_training_plan(self, updated_training_plan: str):
+        # NOTE: only update days from self.day_idx+1 onwards
+        days = []
+        for idx, day in enumerate(updated_training_plan.split("## Day")[1:]):
+
+            print(f"idx: {idx}, self.day_idx: {self.day_idx}")
+            if idx < self.day_idx:
+                # leave the past days unchanged
+                days.append(self.days[idx])
+
+            day_info = DayInfo()
+            day_lines = day.strip().split("\n")
+            day_info.data_summary = day_lines[0].strip() if day_lines else None
+            day_info.motivational_message = (
+                day_lines[1].strip() if len(day_lines) > 1 else None
+            )
+            day_info.exercises = [line.strip() for line in day_lines[2:]]
+            days.append(day_info)
+        self.days = days
 
     def progress_to_next_day(self):
         if self.day_idx < len(self.days) - 1:
@@ -76,46 +109,100 @@ class DailyProgression:
             self.days[self.day_idx].is_today = True
 
 
+# MOCK FUNCTION
 def generate_initial_training_plan(description, date):
     # Mock function to generate a training plan
     training_plan = f"""
     ## Day 1
-    Light stretching
     Keep a positive mindset
+    Light stretching
     - Stretch arms
     - Stretch legs
 
     ## Day 2
-    Walking
     Steady progress is key
+    Walking
     - Walk 20 minutes
     - Breathe deeply
 
     ## Day 3
-    Strength training
     Focus on your goals
+    Strength training
     - Push-ups
     - Squats
 
     ## Day 4
-    Yoga
     Balance and calm
+    Yoga
     - Sun salutation
     - Tree pose
 
     ## Day 5
-    Swimming
     Smooth and steady
+    Swimming
     - Swim 20 minutes
 
     ## Day 6
-    Rest day
     Recovery is important
+    Rest day
     - Relax and hydrate
 
     ## Day 7
-    Light jogging
     Consistency is crucial
+    Light jogging
+    - Jog 20 minutes
+    """
+    return training_plan
+
+
+# MOCK FUNCTION
+def generate_updated_training_plan():  # description, date):
+    # Mock function to generate a training plan
+    training_plan = f"""
+    ## Day 1
+    Keep a positive mindset
+    UPDATED:
+    Light stretching
+    - Stretch arms
+    - Stretch legs
+
+    ## Day 2
+    Steady progress is key
+    UPDATED:
+    Walking
+    - Walk 20 minutes
+    - Breathe deeply
+
+    ## Day 3
+    Focus on your goals
+    UPDATED:
+    Strength training
+    - Push-ups
+    - Squats
+
+    ## Day 4
+    Balance and calm
+    UPDATED:
+    Yoga
+    - Sun salutation
+    - Tree pose
+
+    ## Day 5
+    Smooth and steady
+    UPDATED:
+    Swimming
+    - Swim 20 minutes
+
+    ## Day 6
+    Recovery is important
+    UPDATED:
+    Rest day
+    - Relax and hydrate
+
+    ## Day 7
+    Consistency is crucial
+    UPDATED:
+    Light jogging
     - Jog 20 minutes
     """
     return training_plan
@@ -149,6 +236,12 @@ def training_plan_page():
                 if st.button(f"Finish Day {idx + 1}"):
                     day.finish_day(feedback)
                     progression.progress_to_next_day()
+
+                    new_training_plan = generate_updated_training_plan()
+
+                    progression.update_days_from_updated_training_plan(
+                        new_training_plan
+                    )
                     st.experimental_rerun()
 
     if st.button("Back to Welcome Page"):
