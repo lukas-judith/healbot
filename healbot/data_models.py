@@ -26,3 +26,13 @@ class DailyPatientInfo(BaseModel):
     bod_checkup: PatientCheckup
     biomarkers: PatientBiomarkers
     previous_day_feedback: PreviousDayFeedback
+
+
+class ModelPayload(BaseModel):
+    surgery_type: str
+    surgery_name: str
+    surgery_date: str
+    days_since_surgery: int
+    biomarkers: PatientBiomarkers
+    bod_checkup: PatientCheckup = None  # from day 2 onwards
+    previous_day_feedback: PreviousDayFeedback = None  # from day 2 onwards
