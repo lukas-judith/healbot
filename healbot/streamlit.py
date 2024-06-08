@@ -16,15 +16,9 @@ from healbot.database import (
 # Importing external functions (assuming they are defined in another module)
 # from external_module import generate_recovery_plan_info, ModelPayload, PatientBiomarkers
 
-DAY_COUNT = 1
-PATIENT_ID = "pat-001"
 AGENT_ID = "a4dcef11-857a-48aa-ba91-95a3df092226"
 
-db_file = "data.db"
-
-SURGERY_TYPE = "Knee Surgery"
-SURGERY_NAME = "ACL Reconstruction and Meniscus Repair"
-SURGERY_DATE = "2024-06-08"
+# db_file = "data.db"
 
 
 class PatientCheckup(BaseModel):
@@ -41,29 +35,54 @@ class PreviousDayFeedback(BaseModel):
 
 
 # Function to load the main interface
-def load_interface(steps, sleep_length, cal_burn, rehab_plan, motivation_quote):
+def load_interface():
+
+    previous_day_activity_steps = random.randint(2000, 10000)
+    previous_day_activity_energy_burned = round(random.uniform(1800, 3500), 1)
+    sleep_in_bed_duration = round(random.uniform(6.0, 9.0), 1)
+
+    pload = ModelPayload(
+        surgery_type=st.session_state.surgery_type,
+        surgery_name=st.session_state.surgery_name,
+        surgery_date=st.session_state.surgery_date,
+        days_since_surgery=st.session_state.day_count,
+        biomarkers=PatientBiomarkers(
+            previous_day_activity_steps=previous_day_activity_steps,
+            previous_day_activity_energy_burned=previous_day_activity_energy_burned,
+            sleep_in_bed_duration=sleep_in_bed_duration,
+        ),
+        bod_checkup=None,
+        previous_day_feedback=None,
+    )
+
+    recovery_plan = generate_recovery_plan_info(pload.model_dump(), AGENT_ID)
+
+    rehab_plan_message = recovery_plan.get("rehab-plan-message")
+    rehab_plan_exercises = recovery_plan.get("rehab-plan-exercise")
+    rehab_advice = recovery_plan.get("rehab-advice")
+    motivation_quote = recovery_plan.get("motivational-quote")
 
     # load data from database
-
-    conn = create_connection(db_file)
-
-    # Retrieve the most recent data from the database
-    recovery_plan_info = retrieve_most_recent_data(conn, PATIENT_ID)
-
     col1, col2, col3 = st.columns([1, 2, 1])
 
     # Column 1 for fitness data
     with col1:
         st.header("🏃Fitness Data")
         # Display metrics with emojis as icons
-        st.metric(label="👟 Steps taken", value=f"{steps} steps")
-        st.metric(label="🌙 Sleep duration", value=f"{sleep_length} hours")
-        st.metric(label="🔥 Calories burned", value=f"{cal_burn} calories")
+        st.metric(label="👟 Steps taken", value=f"{previous_day_activity_steps} steps")
+        st.metric(label="🌙 Sleep duration", value=f"{sleep_in_bed_duration} hours")
+        st.metric(
+            label="🔥 Calories burned",
+            value=f"{previous_day_activity_energy_burned} calories",
+        )
 
     # Column 2 for injury rehab plan
     with col2:
         st.header("🩹Injury Rehab Plan")
-        st.write(rehab_plan)
+        st.write(f"Day #{st.session_state.day_count} since surgery")
+        st.write(rehab_plan_message)
+        st.write(rehab_plan_exercises)
+        st.write(rehab_advice)
 
     # Column 3 for motivational quotes
     with col3:
@@ -100,75 +119,59 @@ def feedback_page():
     other_feedback_previous_day = st.text_area("Other Feedback for Yesterday:")
 
     if st.button("Submit Feedback"):
-        patient_checkup = PatientCheckup(
-            current_mental_wellness=current_mental_wellness,
-            current_physical_wellness=current_physical_wellness,
-            current_pain_level=current_pain_level,
-            other_feedback=other_feedback_patient,
-        )
 
-        previous_day_feedback = PreviousDayFeedback(
-            previous_day_exercise_rating=previous_day_exercise_rating,
-            previous_day_exercises=previous_day_exercises,
-            other_feedback=other_feedback_previous_day,
-        )
+        st.session_state.current_mental_wellness = current_mental_wellness
+        st.session_state.current_physical_wellness = current_physical_wellness
+        st.session_state.current_pain_level = current_pain_level
+        st.session_state.other_feedback_patient = other_feedback_patient
 
-        global DAY_COUNT
-        DAY_COUNT += 1
+        st.session_state.previous_day_exercise_rating = previous_day_exercise_rating
+        st.session_state.previous_day_exercises = previous_day_exercises
+        st.session_state.other_feedback_previous_day = other_feedback_previous_day
 
-        model_payload = ModelPayload(
-            surgery_type=SURGERY_TYPE,
-            surgery_name=SURGERY_NAME,
-            surgery_date=SURGERY_DATE,
-            days_since_surgery=DAY_COUNT,
-            biomarkers=PatientBiomarkers(
-                previous_day_activity_steps=5000,
-                previous_day_activity_energy_burned=200.5,
-                sleep_in_bed_duration=8.0,
-            ),
-            bod_checkup=patient_checkup.model_dump(),
-            previous_day_feedback=previous_day_feedback.model_dump(),
-        )
-
-        # Create a connection to the database
-        conn = create_connection(db_file)
-
-        # Create the table
-        create_table(conn)
-
-        # Add data to the table
-        enter_data_into_database(conn, patient_id=PATIENT_ID, daily_info=model_payload)
+        st.session_state.day_count += 1
 
         st.session_state.page = "main"
-        st.success("Thank you for your feedback! Recovery plan generated.")
+        st.success("Thank you for your feedback! Recovery plan will be generated.")
         # st.write(recovery_plan_info)  # Display the generated recovery plan info
         st.experimental_rerun()
 
 
-if __name__ == "__main__":
-    # Initialize session state if not already done
-    if "page" not in st.session_state:
-        st.session_state.page = "main"
+def surgery_info_page():
+    st.header("Enter Surgery Information")
 
-    # Assuming these variables are fetched or computed elsewhere in your code
-    steps = random.randint(2000, 10000)  # Realistic range for daily steps
-    sleep_length = round(
-        random.uniform(6.0, 9.0), 1
-    )  # Realistic range for sleep in hours
-    cal_burn = random.randint(1800, 3500)  # Realistic calorie burn range for a day
-
-    rehab_plan = """
-    ### Day 1: Gentle Range of Motion
-    - Focus on slowly moving the injured joint through the full range of motion.
-    - Do three sets of ten repetitions, twice a day.
-    """
-
-    motivation_quote = (
-        "“It does not matter how slowly you go as long as you do not stop.” – Confucius"
+    surgery_type = st.text_input("Surgery Type", "Knee Surgery")
+    surgery_name = st.text_input(
+        "Surgery Name", "ACL Reconstruction and Meniscus Repair"
     )
+    surgery_date = st.text_input("Surgery Date", "2024-06-08")
 
-    # Load the appropriate page based on the session state
-    if st.session_state.page == "main":
-        load_interface(steps, sleep_length, cal_burn, rehab_plan, motivation_quote)
+    st.session_state.day_count = 1
+    st.session_state.patient_id = "pat-001"
+
+    if st.button("Submit Surgery Info"):
+        st.session_state.surgery_type = surgery_type
+        st.session_state.surgery_name = surgery_name
+        st.session_state.surgery_date = surgery_date
+
+        st.session_state.page = "main"
+        st.experimental_rerun()
+
+
+if __name__ == "__main__":
+    if "page" not in st.session_state:
+        st.session_state.page = "surgery_info"
+
+    if "day_count" not in st.session_state:
+        st.session_state.day_count = 1
+
+    # steps = random.randint(2000, 10000)
+    # sleep_length = round(random.uniform(6.0, 9.0), 1)
+    # cal_burn = random.randint(1800, 3500)
+
+    if st.session_state.page == "surgery_info":
+        surgery_info_page()
+    elif st.session_state.page == "main":
+        load_interface()
     elif st.session_state.page == "feedback":
         feedback_page()
