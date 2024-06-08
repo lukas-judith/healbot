@@ -40,16 +40,6 @@ Exercises:
             self.data_summary, self.motivational_message, "\n".join(self.exercises)
         )
 
-        # if self.data_summary:
-        #     out += f"Data Summary:\n{self.data_summary}\n"
-
-        # if self.motivational_message:
-        #     out += f"Motivational Message:\n{self.motivational_message}\n"
-
-        # if self.exercises:
-        #     out += "Exercises:\n"
-        #     out += "\n".join(self.exercises) + "\n"
-
         if self.is_today:
             out += "\nStatus: Today\n"
         elif self.is_finished:
@@ -82,14 +72,12 @@ class DailyProgression:
         self.days = days
 
     def update_days_from_updated_training_plan(self, updated_training_plan: str):
-        # NOTE: only update days from self.day_idx+1 onwards
         days = []
         for idx, day in enumerate(updated_training_plan.split("## Day")[1:]):
-
-            print(f"idx: {idx}, self.day_idx: {self.day_idx}")
-            if idx < self.day_idx:
+            if idx < self.day_idx + 1:
                 # leave the past days unchanged
                 days.append(self.days[idx])
+                continue
 
             day_info = DayInfo()
             day_lines = day.strip().split("\n")
@@ -111,8 +99,7 @@ class DailyProgression:
 
 # MOCK FUNCTION
 def generate_initial_training_plan(description, date):
-    # Mock function to generate a training plan
-    training_plan = f"""
+    training_plan = """
     ## Day 1
     Keep a positive mindset
     Light stretching
@@ -156,9 +143,8 @@ def generate_initial_training_plan(description, date):
 
 
 # MOCK FUNCTION
-def generate_updated_training_plan():  # description, date):
-    # Mock function to generate a training plan
-    training_plan = f"""
+def generate_updated_training_plan():
+    training_plan = """
     ## Day 1
     Keep a positive mindset
     UPDATED:
@@ -235,13 +221,13 @@ def training_plan_page():
                 feedback = st.text_area(f"Feedback for Day {idx + 1}")
                 if st.button(f"Finish Day {idx + 1}"):
                     day.finish_day(feedback)
-                    progression.progress_to_next_day()
 
                     new_training_plan = generate_updated_training_plan()
-
                     progression.update_days_from_updated_training_plan(
                         new_training_plan
                     )
+                    progression.progress_to_next_day()
+
                     st.experimental_rerun()
 
     if st.button("Back to Welcome Page"):
