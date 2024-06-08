@@ -41,7 +41,7 @@ class ModelPayload(BaseModel):
     surgery_date: str
     days_since_surgery: int
     biomarkers: PatientBiomarkers
-    bod_checkup: PatientCheckup = None  # from day 2 onwards
+    bod_checkup: Optional[PatientCheckup] = None  # from day 2 onwards
     previous_day_feedback: Optional[PreviousDayFeedback] = None  # from day 2 onwards
 
 

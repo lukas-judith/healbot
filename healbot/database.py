@@ -1,5 +1,6 @@
+import json
 import sqlite3
-from healbot.data_models import ModelPayload, ModelResponse
+from healbot.data_models import ModelPayload
 from healbot.data_models import PatientBiomarkers, PatientCheckup, PreviousDayFeedback
 
 
@@ -72,6 +73,46 @@ def enter_data_into_database(conn, patient_id: str, daily_info: ModelPayload) ->
         print(f"The error '{e}' occurred")
 
 
+def retrieve_most_recent_data(conn, patient_id: str) -> ModelPayload:
+    """
+    Find entry with highest value of days_since_surgery.
+    """
+
+    cursor = conn.cursor()
+    cursor.execute(
+        f"SELECT * FROM patient_data WHERE patient_id = '{patient_id}' ORDER BY days_since_surgery DESC LIMIT 1"
+    )
+    row = cursor.fetchone()
+    if row is None:
+        return None
+
+    biomarkers = PatientBiomarkers(
+        previous_day_activity_steps=row[5],
+        previous_day_activity_energy_burned=row[6],
+        sleep_in_bed_duration=row[7],
+    )
+    bod_checkup = PatientCheckup(
+        current_mental_wellness=row[8],
+        current_physical_wellness=row[9],
+        current_pain_level=row[10],
+    )
+    previous_day_feedback = PreviousDayFeedback(
+        previous_day_exercise_rating=row[11],
+        previous_day_exercises={},
+    )
+    daily_info = ModelPayload(
+        surgery_type=row[2],
+        surgery_name=row[3],
+        surgery_date=row[4],
+        days_since_surgery=row[5],
+        biomarkers=biomarkers.model_dump(),
+        bod_checkup=bod_checkup.model_dump(),
+        previous_day_feedback=previous_day_feedback.model_dump(),
+    )
+
+    return daily_info
+
+
 # list all data from table
 def list_all_data(conn):
     cursor = conn.cursor()
@@ -120,8 +161,10 @@ if __name__ == "__main__":
     # Add data to the table
     enter_data_into_database(conn, "patient_001", daily_info)
 
+    last_data = retrieve_most_recent_data(conn, "patient_001")
+
     # print the data in the table
-    list_all_data(conn)
+    print("Most recent data:", last_data)
 
     # Close the connection
     if conn:
