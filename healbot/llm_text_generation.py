@@ -2,8 +2,8 @@ import json
 import requests
 from time import sleep
 
-from healbot.data_models import ModelPayload
-from healbot.utils import clean_json
+from data_models import ModelPayload
+from utils import clean_json
 
 
 # TODO: move to config file

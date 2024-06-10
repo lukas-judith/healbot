@@ -4,9 +4,9 @@ from pydantic import BaseModel
 import random
 import json
 
-from healbot.llm_text_generation import generate_recovery_plan_info, ModelPayload
-from healbot.data_models import PatientBiomarkers, PatientCheckup, PreviousDayFeedback
-from healbot.database import (
+from llm_text_generation import generate_recovery_plan_info, ModelPayload
+from data_models import PatientBiomarkers, PatientCheckup, PreviousDayFeedback
+from database import (
     create_connection,
     create_table,
     enter_data_into_database,
@@ -34,6 +34,24 @@ class PreviousDayFeedback(BaseModel):
 
 # Function to load the main interface
 def load_interface():
+
+    # Custom CSS to inject into the Streamlit interface for styling
+    st.markdown(
+        """
+        <style>
+        .stMarkdown { background: #f0f2f6; }
+        .st-emotion-cache-1r4qj8v { background: #0794FF !important;
+        }
+        .st-emotion-cache-1kyxreq {
+        justify-content: center !important;
+        }
+        .block-container st-emotion-cache-13ln4jf ea3mdgi5 { background-color: #0794FF !important; }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # TODO: REMOVE RANDOM DATA (Update with live data from SahhaAi)
     previous_day_activity_steps = random.randint(2000, 10000)
     previous_day_activity_energy_burned = round(random.uniform(1800, 3500), 1)
     sleep_in_bed_duration = round(random.uniform(6.0, 9.0), 1)
@@ -72,17 +90,21 @@ def load_interface():
                 f"UPDATING USING PAYLOAD \n{json.dumps(pload.model_dump(), indent=2)}"
             )
             recovery_plan = generate_recovery_plan_info(pload.model_dump(), AGENT_ID)
-            # Place the resource-intensive function here
             st.session_state.interface_loaded = True
         else:
             recovery_plan = {}
     else:
         recovery_plan = {}
 
+    # Ensure recovery_plan is a dictionary
+    recovery_plan = recovery_plan if isinstance(recovery_plan, dict) else {}
+
     rehab_plan_message = recovery_plan.get("rehab-plan-message")
     rehab_plan_exercises = recovery_plan.get("rehab-plan-exercise")
     rehab_advice = recovery_plan.get("rehab-advice")
     motivation_quote = recovery_plan.get("motivational-quote")
+  
+  
 
     # remember exercises for next day
     if rehab_plan_exercises is not None and len(rehab_plan_exercises) > 0:
@@ -163,9 +185,41 @@ def feedback_page():
         st.success("Thank you for your feedback! Recovery plan will be generated.")
         st.rerun()
 
+from PIL import Image
+# import streamlit as st
 
 def surgery_info_page():
-    st.header("Enter Surgery Information")
+    logo_path = r"C:\Users\jorge\OneDrive\Documents\Work\RehabWise\healbot\healbot\logo.png"
+    logo = Image.open(logo_path)
+
+    # Custom CSS to center all HTML elements
+    st.markdown(
+        """
+        <style>
+        .css-1d391kg { text-align: center; }
+        /* Additional custom CSS */
+        .stMarkdown { background: #f0f2f6; }
+        .st-emotion-cache-1r4qj8v { background: #0794FF !important;
+        }
+        .st-emotion-cache-1kyxreq {
+        justify-content: center !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Create columns for layout
+    col1, col2, col3 = st.columns([1, 3, 1])
+
+    # Display the logo in the middle column with a specific width
+    with col1:
+        st.image(logo, width=200)  # Adjust width as needed
+    # st.image(logo, caption='Logo')
+
+    with col2:
+        st.header("Welcome to RehabWise!")
+        st.subheader("Enter Surgery Information")
 
     # flag for generating a new recovery plan
     st.session_state.generate_new_data = False
@@ -182,13 +236,16 @@ def surgery_info_page():
         print("INIT EXERCISES")
         st.session_state.previous_day_exercises = {}
 
-    surgery_type = st.text_input("Surgery Type", "Knee Surgery")
+    surgery_type = st.text_input(
+        "Surgery Type", "Knee Surgery"
+    )
     surgery_name = st.text_input(
         "Surgery Name", "ACL Reconstruction and Meniscus Repair"
     )
     surgery_date = st.text_input("Surgery Date", "2024-06-08")
 
-    st.session_state.day_count = 1
+    # Set what day to start on
+    st.session_state.day_count = 200
     st.session_state.patient_id = "pat-001"
 
     if st.button("Submit Surgery Info"):
@@ -199,21 +256,75 @@ def surgery_info_page():
         st.session_state.page = "main"
         st.rerun()
 
+def landing_page():
+    st.title("Welcome to HealBot!")
+    st.write("Your companion for post-surgery recovery.")
+    # Set the page configuration
+
+    # Custom CSS to center the content
+    st.markdown(
+        """
+        <style>
+        .st-emotion-cache-1v0mbdj {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .enter-button {
+            justify-content: center;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: flex;
+            font-size: 16px;
+            margin-top: 20px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+        }
+        .enter-button:hover {
+            background-color: #45a049;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # # Centered content
+    # st.markdown('<div class="centered-content">', unsafe_allow_html=True)
+
+    # Display the logo
+    logo_path = r"C:\Users\jorge\OneDrive\Documents\Work\RehabWise\healbot\healbot\logo.png"
+    logo = Image.open(logo_path)
+    st.image(logo, caption="RehabWise", use_column_width=True)
+
+    # Display the button
+    if  st.button("Enter", key="enter", help="Click to enter the application", use_container_width=True):
+        st.write("Welcome to RehabWise!")
+        st.session_state.page = "surgery_info"
+        st.experimental_rerun()
+
+    # st.markdown('</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     if "page" not in st.session_state:
-        st.session_state.page = "surgery_info"
+        st.session_state.page = "RehabWise"
 
     if "day_count" not in st.session_state:
-        st.session_state.day_count = 1
+        st.session_state.day_count = 200
 
     if "interface_loaded" not in st.session_state:
         st.session_state.interface_loaded = False
 
-    if st.session_state.page == "surgery_info":
+    if st.session_state.page == "RehabWise":
+        landing_page()
+    elif st.session_state.page == "surgery_info":
         surgery_info_page()
     elif st.session_state.page == "main":
         st.session_state.generate_new_data = True
         load_interface()
     elif st.session_state.page == "feedback":
         feedback_page()
+    

@@ -1,7 +1,7 @@
 import json
 import sqlite3
-from healbot.data_models import ModelPayload
-from healbot.data_models import PatientBiomarkers, PatientCheckup, PreviousDayFeedback
+from data_models import ModelPayload
+from data_models import PatientBiomarkers, PatientCheckup, PreviousDayFeedback
 
 
 # Create connection to SQLite database
