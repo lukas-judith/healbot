@@ -39,9 +39,9 @@ def load_interface():
     st.markdown(
         """
         <style>
-        .stMarkdown { background: #f0f2f6; }
-        .st-emotion-cache-1r4qj8v { background: #0794FF !important;
-        }
+        # .stMarkdown { background: #f0f2f6; }
+        # .st-emotion-cache-1r4qj8v { background: #0794FF !important;
+        # }
         .st-emotion-cache-1kyxreq {
         justify-content: center !important;
         }
@@ -198,8 +198,14 @@ def surgery_info_page():
         <style>
         .css-1d391kg { text-align: center; }
         /* Additional custom CSS */
-        .stMarkdown { background: #f0f2f6; }
-        .st-emotion-cache-1r4qj8v { background: #0794FF !important;
+        # .stMarkdown { background: #f0f2f6; }
+        # .st-emotion-cache-1r4qj8v { background: #0794FF !important;
+        # }
+        .st-emotion-cache-1h7x1t2 {
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .st-emotion-cache-1kyxreq {
         justify-content: center !important;

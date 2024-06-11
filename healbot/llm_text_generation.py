@@ -1,5 +1,6 @@
 import json
 import requests
+import time
 from time import sleep
 
 from data_models import ModelPayload
@@ -34,8 +35,12 @@ def get_agent_response(agent_id: str, prompt: str) -> str:
 
     role = None
     content = None
+    start_time = time.time()  # Record the start time
 
     while not role == "agent" or content is None:
+        if time.time() - start_time > 15:  # Check if 10 seconds have passed
+            print("Timeout: No response from agent within 10 seconds.")
+            return "No response within timeout period."
         sleep(1)
         print("Waiting for agent message")
 
