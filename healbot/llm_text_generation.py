@@ -5,16 +5,9 @@ from time import sleep
 
 from data_models import ModelPayload
 from utils import clean_json
+from config import project_id, authorization_token, region, base_url, headers  # Import configuration
 
 
-# TODO: move to config file
-project_id = "d3724316f161-4d3e-ba20-5bf617b83967"
-authorization_token = f"d3724316f161-4d3e-ba20-5bf617b83967:sk-YWE1MTQxOWYtN2Y2Yi00OGE4LTkxYWEtNWU2NTJmOTdjOTQw"
-region = "f1db6c"
-base_url = f"https://api-{region}.stack.tryrelevance.com/latest"
-headers = {
-    "Authorization": authorization_token,
-}
 
 
 def get_agent_response(agent_id: str, prompt: str) -> str:
@@ -38,8 +31,8 @@ def get_agent_response(agent_id: str, prompt: str) -> str:
     start_time = time.time()  # Record the start time
 
     while not role == "agent" or content is None:
-        if time.time() - start_time > 15:  # Check if 10 seconds have passed
-            print("Timeout: No response from agent within 10 seconds.")
+        if time.time() - start_time > 20:  # Check if 10 seconds have passed
+            print("Timeout: No response from agent within 20 seconds.")
             return "No response within timeout period."
         sleep(1)
         print("Waiting for agent message")
